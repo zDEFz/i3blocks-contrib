@@ -1,63 +1,97 @@
 #!/usr/bin/env bash
-# Author: zDEFz
 
-OPTIONS="Options:
-    -class       --classname               Get classname of current window
-    -title       --titlename               Get titlename of current window
-    -dim         --dimensions              Get window dimensions of current window
-    -pos         --position                Get window positions of current window
-"
+# Author: zDEFz
+# Editor: Pysis
+
+OPTIONS='Other Options:
+  -h, --help                    Print usage information.
+
+Display Options:
+  -c, --classname               Get classname of current window
+  -d, --dimensions              Get window dimensions of current window
+  -p, --position                Get window positions of current window
+  -t, --titlename               Get titlename of current window
+';
 
 function print_usage() {
-  printf "Usage:\n"
-  printf "\n$(basename "$0") %s\n\n" "$OPTIONS"
+  echo "Usage: $(basename "$0") <displayOption ...>";
+  echo;
+  echo "$OPTIONS";
 }
 
 function getClassname()
 {
-    classname="$(xdotool getactivewindow getwindowclassname)"
-    echo "class=[$classname]"
+  classname="$(
+    xdotool getactivewindow getwindowclassname
+  )";
+  echo -n "class=[$classname]";
 }
 
 function getTitlename()
 {
-    #get titlename
-    titlename="$(xdotool getactivewindow getwindowname)"
-    echo "title=[$titlename]"
+  titlename="$(
+    xdotool getactivewindow getwindowname
+  )";
+  echo -n "title=[$titlename]";
 }
 
 function getWindowDimensions()
 {
-    windowdimensions="$(xdotool getactivewindow getwindowgeometry | grep Geometry | cut -d ':' -f2)"
-    echo "Dim:$windowdimensions"
+  windowdimensions="$(
+    xdotool getactivewindow getwindowgeometry \
+    | grep 'Geometry' \
+    | awk '{ print $2 }'
+  )";
+  echo -n "Dim=[$windowdimensions]";
 }
 
 function getWindowPosition()
 {
-    windowposition="$(xdotool getwindowgeometry $(xdotool getactivewindow) | grep "Position" | awk '{print $2}')"
-    echo "Pos:$windowposition"
+  windowposition="$(
+    xdotool getactivewindow getwindowgeometry \
+    | grep "Position" \
+    | awk '{ print $2 }'
+  )";
+  echo -n "Pos=[$windowposition]";
 }
 
-while true; do
-  if [ -z "$1" ]; then
-    print_usage
-    exit 1
-  fi
+hasPrintedAttribute='false';
+
+if [ "$1" == '-h' -o "$1" == '--help' ]; then
+  print_usage;
+  exit 0;
+fi
+
+while [ -n "$1" ]; do
   case "$1" in
-  -class | --classname)
-    getClassname
-    exit 1
-    ;;
-  -title | --titlename)
-    getTitlename
-    exit 0
-    ;;
-  -dim | --dimensions)
-    getWindowDimensions
-    exit 0
-    ;;
-  -pos | --position)
-    getWindowPosition
-    exit 0
-    ;;
-  esac; done
+    -c | --classname  )
+      [ "$hasPrintedAttribute" == 'true' ] && echo -n ' ';
+      hasPrintedAttribute='true';
+      getClassname;
+      ;;
+    -d | --dimensions )
+      [ "$hasPrintedAttribute" == 'true' ] && echo -n ' ';
+      hasPrintedAttribute='true';
+      getWindowDimensions;
+      ;;
+    -p | --position   )
+      [ "$hasPrintedAttribute" == 'true' ] && echo -n ' ';
+      hasPrintedAttribute='true';
+      getWindowPosition;
+      ;;
+    -t | --titlename  )
+      [ "$hasPrintedAttribute" == 'true' ] && echo -n ' ';
+      hasPrintedAttribute='true';
+      getTitlename;
+      ;;
+  esac
+
+  shift 1;
+done
+
+if [ "$hasPrintedAttribute" == 'false' ]; then
+  print_usage;
+  exit 1;
+else
+  echo;
+fi
